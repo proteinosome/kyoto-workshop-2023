@@ -333,12 +333,21 @@ Let's try to genotype our demo dataset. This dataset only contains a small subse
   --genome /data/kpin/reference/human_GRCh38_no_alt_analysis_set.fasta \
   --repeats /data/kpin/reference/pathogenic_repeats.hg38.bed \
   --reads m64017_200723_190224.hg38.haplotagged.bam \
-  --output-prefix  m64017_200723_190224.trgt
+  --output-prefix m64017_200723_190224.trgt
 
-TRVZ
+samtools sort m64017_200723_190224.trgt.spanning.bam > m64017_200723_190224.trgt.spanning.sorted.bam
+
+samtools index m64017_200723_190224.trgt.spanning.sorted.bam
+
+/data/kpin/softwares/trvz \
+  --genome /data/kpin/reference/human_GRCh38_no_alt_analysis_set.fasta \
+  --image ATXN1.png --repeat-id ATXN1 \
+  --repeats /data/kpin/reference/pathogenic_repeats.hg38.bed \
+  --spanning-reads m64017_200723_190224.trgt.spanning.sorted.bam \
+  --vcf m64017_200723_190224.trgt.vcf.gz
 ```
 
-EXPLAIN VCF TAGS IN TRGT
+There are many useful information for each of the repeat loci genotyped. For example, `AL` tells us how long the repeats are for each haplotype, and `SD` provides the depth supporting each allele. The definitions of each tag is documented [here](https://github.com/PacificBiosciences/trgt/blob/main/docs/vcf_files.md)
 
 # pb-human-wgs-workflow is a complete pipeline to characterize human genomes
 
@@ -360,15 +369,15 @@ bash workflow/process_cohort.local.sh small_HG005_trio
 
 By splitting the workflow into multiple stages, users can process sequencing output (SMRT Cells) individually whever they receive the data, then process the full sample when all the sequencing data for that sample has been collected. Finally, the `process_cohort` step takes in a `cohort.yaml` file specifying the relationships between all samples and carry out variants annotation and filtering. Note that despite the name, `process_cohort` can also be done on a singleton for variants annotation and filtering.
 
-Quiz: Can you use the output of `process_cohort` to look for any interesting structural variant and visualize them in IGV?
+Bonus: Can we use the output of `process_cohort` to look for any interesting structural variant and visualize them in IGV?
 
 ## pb-CpG-tools summarises methylation probability from multiple reads across the genome
 
-The 5mC probability in BAM file we saw came from multiple reads. While it is incredible that we can actually look at single-molecule methylation, we often want to make use of all molecules in order to decide for example if a CpG island is hyper- or hypo-methylated. This is where [pb-CpG-tool]() comes into the picture. In the pb-human-wgs-workflow's output folder, you can find a folder called `5mC_pileup`. Download the `XXX` bed file and open it in your IGV that has the aligned `BAM` file opened. 
+The 5mC probability in BAM file we saw came from multiple reads. While it is incredible that we can actually look at single-molecule methylation, we often want to make use of all molecules in order to decide for example if a CpG island is hyper- or hypo-methylated. This is where [pb-CpG-tool](https://github.com/PacificBiosciences/pb-CpG-tools) comes into the picture. In the pb-human-wgs-workflow's output folder, you can find a folder called `5mC_cpg_pileup`. Download the `/data/kpin/samples/small_HG005/5mc_cpg_pileup/small_HG005.GRCh38.hap[12].denovo.bed` bed files (both hap1 and hap2) and open it in your IGV that has the aligned `BAM` file opened. 
 
 # Bonus: Paraphase for SMN1/SMN2
 
-Paraphase is another tool recently developed by PacBio to resolve complex genes loci in the human genome that are relevant to many important diseases. The tool currently supports resolving the highly complex SMN1/SMN2 that differ from each other mostly in a single nucleotide, i.e. c.840C (SMN1) and c.840T (SMN2). Paraphase is freely available on PacBio's [GitHub](https://github.com/PacificBiosciences/paraphase)
+Paraphase is another tool recently developed by PacBio to resolve complex genes loci in the human genome that are relevant to many important diseases. The tool currently supports resolving the highly complex SMN1/SMN2 that differ from each other mostly in a single nucleotide, i.e. c.840C (SMN1) and c.840T (SMN2). Paraphase is freely available on PacBio's [GitHub](https://github.com/PacificBiosciences/paraphase). Let's try using Paraphase on the example HG01175 data (If you clone the GitHub for Paraphase, it comes with a set of examples `BAM` file including HG01175).
 
 ```
 conda activate /home/lecturer14/miniconda3/envs/paraphase
@@ -377,3 +386,5 @@ paraphase \
   -b /data/kpin/softwares/paraphase/examples/data/HG01175.bam \
   -o HG01175_paraphase
 ```
+
+Let's visualize the SMN1/SMN2 haplotypes in IGV.
