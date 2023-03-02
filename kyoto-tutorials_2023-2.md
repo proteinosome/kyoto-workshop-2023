@@ -21,7 +21,6 @@ Updated: 2023-3-1
   - [pb-CpG-tools summarises methylation probability from multiple reads across the genome](#pb-cpg-tools-summarises-methylation-probability-from-multiple-reads-across-the-genome)
 - [Bonus: Paraphase for SMN1/SMN2](#bonus-paraphase-for-smn1smn2)
 
-
 # Disclaimer
 
 This tutorial is created for the Kyoto University Symposium's workshop for long-reads sequencing and the materials below are updated to the best of our knowledge as of February 2023. Recommendations and data types/characteristics are not guaranteed to be the same in the future and may change.
@@ -81,9 +80,9 @@ cp -r /data/kpin/smrtcells/ready/small_HG005 ~/smrtcells/ready/
 
 Let's take a peek at HiFi reads!
 
--   PacBio’s BAM file is fully compatible with the SAM specification:
+- PacBio’s BAM file is fully compatible with the SAM specification:
     <https://samtools.github.io/hts-specs/SAMv1.pdf>
--   The full documentation of PacBio's BAM format is [here](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html). 
+- The full documentation of PacBio's BAM format is [here](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html).
 
 ```
 samtools view smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam |
@@ -113,18 +112,18 @@ samtools view smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam |
 ## Col 19: Ml:B:C,143,27,110,113,1,252,253,54,113,247,12,174,252,240,42,22,45,36,...
 ```
 
--   Column 2-9 are usually meant for storing alignment information.
+- Column 2-9 are usually meant for storing alignment information.
     However, PacBio’s BAM files from the instrument do not have any
     alignment. Hence, any values in these columns \*\*before alignment\*
     are just “placeholders” meant to comply with the SAM format.
 
--   For CCS BAM file, two important columns are column 14 and 15. `np`
+- For CCS BAM file, two important columns are column 14 and 15. `np`
     indicates the number of full passes used to generate the CCS read,
     and `rq` represents the average per-base QV score for the read.
     Here, this read has an accuracy of `0.997783`. QV score can be
     calculated as:
      −10 * log10(1 - accuracy))
--   **Tricks** In bash, we can use the `bc` tool to carry out math
+- **Tricks** In bash, we can use the `bc` tool to carry out math
     operation (Pipe the equation you want to evaluate to `bc -l`). Here
     for example, this read is QV27:
 
@@ -153,14 +152,14 @@ samtools view -H smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam
     ## @PG  ID:samtools PN:samtools PP:ccs-4.2.0    VN:1.14 CL:samtools view -s 0.1 -bh isoseq3/alz.ccs.bam
     ## @PG  ID:samtools.1   PN:samtools PP:samtools VN:1.14 CL:samtools view -H alz.ccs.toy.bam
 
--   The “`-H`” parameter outputs just the header of a BAM/SAM file. A
+- The “`-H`” parameter outputs just the header of a BAM/SAM file. A
     header contains information such as the sequencing platform,
     chemistry version, sample names, and even commands used to generate
     the BAM/SAM file.
--   Some PacBio’s tools rely on the header to run. E.g. Modern version
+- Some PacBio’s tools rely on the header to run. E.g. Modern version
     of CCS will not be able to run if the chemistry is too old (E.g. RS
     II).
--   Can you find out what platform this example dataset was sequenced on
+- Can you find out what platform this example dataset was sequenced on
     and what was the version of CCS used?
 
 ## QC of sequencing data on command-line
@@ -171,9 +170,15 @@ Normally, PacBio's instruments' users will use SMRT Link's (GUI) to carry out se
 # pbindex creats an index file for PacBio's unaligned BAM
 pbindex smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam
 
-mkdir m64017_200723_190224_runqc_reports
+mkdir m64017_200723_190224_runqc_reports 
 
-runqc-reports smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam -o m64017_200723_190224_runqc_reports
+# Create dataset XML
+dataset create --type ConsensusReadSet \
+  smrtcells/ready/small_HG005/m64017_200723_190224.consensusreadset.xml 
+  smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam
+
+runqc-reports smrtcells/ready/small_HG005/m64017_200723_190224.consensusreadset.xml \
+  -o m64017_200723_190224_runqc_reports
 
 ## SUMMARY METRICS:
 ##     CCS Analysis Report (ccs.report.json):
@@ -192,9 +197,11 @@ samtools view smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam | 
 
 Note that this is an older dataset in 2020. Our chemistry and softwares had improved and in most of the newer dataset you should see a median read quality of around Q33 to Q34 for a standard human WGS library (~15 kbp insert). There are many new datasets available on PacBio's [website](https://www.pacb.com/connect/datasets/) including those from the latest Revio instrument.
 
+Bonus: There's a small Revio HG002 dataset in the `/data/kpin/revio_hg002` folder. Can you QC this dataset and look at the data quality in the latest dataset?
+
 # Alignment of HiFi reads
 
-As introduced, HiFi reads are both long and extremely accurate. While HiFi reads are highly accurate (on average Q30, or 99.9% accurate), the error profile is different from that of short-reads sequencing. As such, using alignment tools commonly used for short-reads may not provide satisfactory results (e.g. `bwa mem`). The most well-established long-reads aligment tool is called `minimap2` (available on [GitHub](https://github.com/lh3/minimap2)). You can use `minimap2` to align HiFi reads `FASTQ/FASTA`. 
+As introduced, HiFi reads are both long and extremely accurate. While HiFi reads are highly accurate (on average Q30, or 99.9% accurate), the error profile is different from that of short-reads sequencing. As such, using alignment tools commonly used for short-reads may not provide satisfactory results (e.g. `bwa mem`). The most well-established long-reads aligment tool is called `minimap2` (available on [GitHub](https://github.com/lh3/minimap2)). You can use `minimap2` to align HiFi reads `FASTQ/FASTA`.
 
 However, to make it easier for customers and to standardize best practices, PacBio has adapted `minimap2` into `pbmm2`, and recommend customers to use `pbmm2` for HiFi reads alignment. Let's align our small dataset to the human genome. Note that with `pbmm` you can directly align PacBio's `BAM` file without having to convert it into `FASTQ`/`FASTQ`
 
@@ -227,7 +234,7 @@ In IGV (version 2.14 and above), you can visualize 5mC methylation in the alignm
 
 With the reads now aligned to hg38 genome, we can use Google DeepVariant which is known as the best small variants caller for HiFi reads to call SNPs and indels in our example dataset. The latest DeepVariant v1.5.0 even comes with a model that works for the latest `Revio` instrument.
 
-DeepVariant can be run using `singularity` as a `docker` container. We have already "pulled" the latest `DeepVariant` docker container using `singularity` to a local SIF image at 
+DeepVariant can be run using `singularity` as a `docker` container. We have already "pulled" the latest `DeepVariant` docker container using `singularity` to a local SIF image at
 `/data/kpin/softwares/deepvariant_latest.sif` so you can directly run DeepVariant using the image:
 
 ```
@@ -258,6 +265,7 @@ If you are familiar with VCF format, DeepVariant's output should be familiar to 
 ```
 bcftools filter -i 'FILTER="PASS"' /data/kpin/example_output/small_HG005.GRCh38.deepvariant.vcf.gz | grep -v "^#" | wc -l
 ```
+
 ## Phasing aligned BAM files with WhatsHap
 
 After small variants calling, a typical step here would be to phase the aligned `BAM` file using the called variants. The recommended software currently is [WhatsHap](https://whatshap.readthedocs.io/en/latest/guide.html) and you can phase the `BAM` file with the following command:
@@ -295,7 +303,7 @@ The `haplotag` command will add a `HP` tag into the aligned `BAM` file that can 
 
 # Call structural variants using pbsv
 
-PacBio develops a tool called `pbsv` that is often used to call structural variants in HiFi sequencing data. There are two steps in `pbsv`, one is called `discover` and another one called `call`. `pbsv discover` is used to look for any potential structural variants "signatures" in the alignment BAM file. Signatures are then clustered together to group breakpoints close to each other. Finally, `pbsv call` is used to call SVs based on the signatures. `pbsv` can also carry out joint calling from multiple samples to increase sensitivity. 
+PacBio develops a tool called `pbsv` that is often used to call structural variants in HiFi sequencing data. There are two steps in `pbsv`, one is called `discover` and another one called `call`. `pbsv discover` is used to look for any potential structural variants "signatures" in the alignment BAM file. Signatures are then clustered together to group breakpoints close to each other. Finally, `pbsv call` is used to call SVs based on the signatures. `pbsv` can also carry out joint calling from multiple samples to increase sensitivity.
 
 Let's try running `pbsv` on our example dataset.
 
@@ -322,7 +330,7 @@ The types of SV called by `pbsv` is documented in details on PacBio's GitHub [pa
 
 # Genotyping of tandem repeats using TRGT
 
-Recently, PacBio has developed a new tool ([GitHub](https://github.com/PacificBiosciences/trgt)) specifically to genotype tandem-repeats. This includes both STR and VNTR. TRGT takes in a bed file indicating regions in the genome that are known to be polymorphic in both repeats motif and length. A companion tool called TRVZ can then be used to visualize the repeat structures as well as 5mC methylation around the repeats. 
+Recently, PacBio has developed a new tool ([GitHub](https://github.com/PacificBiosciences/trgt)) specifically to genotype tandem-repeats. This includes both STR and VNTR. TRGT takes in a bed file indicating regions in the genome that are known to be polymorphic in both repeats motif and length. A companion tool called TRVZ can then be used to visualize the repeat structures as well as 5mC methylation around the repeats.
 
 There are on-going efforts to provide a more comprehensive catalogue of repeats. The bed file used here is a set of repeats loci discovered to be polymorphic from a set of short-reads genomes previously. This also includes a set of 56 known loci known to be potentially pathogenic if the repeats are expanded. These are for example ATXN1, FMR1, RFC1 etc.
 
@@ -349,6 +357,8 @@ samtools index m64017_200723_190224.trgt.spanning.sorted.bam
 
 There are many useful information for each of the repeat loci genotyped. For example, `AL` tells us how long the repeats are for each haplotype, and `SD` provides the depth supporting each allele. The definitions of each tag is documented [here](https://github.com/PacificBiosciences/trgt/blob/main/docs/vcf_files.md)
 
+Bonus: Take a look at the Revio dataset. Genotype the pathogenic repeat in this dataset and visualize the repeat structure.
+
 # pb-human-wgs-workflow is a complete pipeline to characterize human genomes
 
 As you can see, there are various steps to characterize a human genome, and we have not even annotated the variants! This is why PacBio maintains a `Snakemake` workflow called [pb-human-wgs-workflow](https://github.com/PacificBiosciences/pb-human-wgs-workflow-snakemake) that includes all the above steps we have learned and many other steps including quality control (e.g. depth of coverage), variants annotation (consequence and genes' names) and joint variant calling (e.g. trio).
@@ -373,7 +383,7 @@ Bonus: Can we use the output of `process_cohort` to look for any interesting str
 
 ## pb-CpG-tools summarises methylation probability from multiple reads across the genome
 
-The 5mC probability in BAM file we saw came from multiple reads. While it is incredible that we can actually look at single-molecule methylation, we often want to make use of all molecules in order to decide for example if a CpG island is hyper- or hypo-methylated. This is where [pb-CpG-tool](https://github.com/PacificBiosciences/pb-CpG-tools) comes into the picture. In the pb-human-wgs-workflow's output folder, you can find a folder called `5mC_cpg_pileup`. Download the `/data/kpin/samples/small_HG005/5mc_cpg_pileup/small_HG005.GRCh38.hap[12].denovo.bed` bed files (both hap1 and hap2) and open it in your IGV that has the aligned `BAM` file opened. 
+The 5mC probability in BAM file we saw came from multiple reads. While it is incredible that we can actually look at single-molecule methylation, we often want to make use of all molecules in order to decide for example if a CpG island is hyper- or hypo-methylated. This is where [pb-CpG-tool](https://github.com/PacificBiosciences/pb-CpG-tools) comes into the picture. In the pb-human-wgs-workflow's output folder, you can find a folder called `5mC_cpg_pileup`. Download the `/data/kpin/samples/small_HG005/5mc_cpg_pileup/small_HG005.GRCh38.hap[12].denovo.bed` bed files (both hap1 and hap2) and open it in your IGV that has the aligned `BAM` file opened.
 
 # Bonus: Paraphase for SMN1/SMN2
 
