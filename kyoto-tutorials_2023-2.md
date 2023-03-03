@@ -174,7 +174,7 @@ mkdir m64017_200723_190224_runqc_reports
 
 # Create dataset XML
 dataset create --type ConsensusReadSet \
-  smrtcells/ready/small_HG005/m64017_200723_190224.consensusreadset.xml 
+  smrtcells/ready/small_HG005/m64017_200723_190224.consensusreadset.xml \
   smrtcells/ready/small_HG005/m64017_200723_190224.hifi_reads.bam
 
 runqc-reports smrtcells/ready/small_HG005/m64017_200723_190224.consensusreadset.xml \
